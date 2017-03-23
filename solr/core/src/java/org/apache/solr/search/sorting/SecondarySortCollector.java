@@ -15,15 +15,13 @@ import com.google.common.collect.Range;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.ImmutableRangeMap;
 
-import java.util.Map;
-
 /**
  * This collector will be used to chain together a dynamic list of collectors,
  * to perform sorting and ranking on the result set. The collectors passed in are
  * expected to implement the TieBreakerGroupAware interface, which requires the collector
  * to return any
  */
-public class DynamicSortingCollector extends TopDocsCollector {
+public class SecondarySortCollector extends TopDocsCollector {
 
     private boolean fillFields;
     private boolean trackDocScores;
@@ -35,12 +33,12 @@ public class DynamicSortingCollector extends TopDocsCollector {
     private LeafReaderContext singleLeafReaderContext;
     private RangeMap<Integer, LeafReaderContext> contextRangeMap;
 
-    public DynamicSortingCollector(PriorityQueue<?> priorityQueue,
-                                   List<TBGAwareCollector> collectors,
-                                   int numHits, FieldDoc after,
-                                   boolean fillFields,
-                                   boolean trackDocScores,
-                                   boolean trackMaxScore) {
+    public SecondarySortCollector(PriorityQueue<?> priorityQueue,
+                                  List<TBGAwareCollector> collectors,
+                                  int numHits, FieldDoc after,
+                                  boolean fillFields,
+                                  boolean trackDocScores,
+                                  boolean trackMaxScore) {
         super(priorityQueue);
         this.collectorsIterator = collectors.listIterator();
         this.fillFields = fillFields;
@@ -53,7 +51,7 @@ public class DynamicSortingCollector extends TopDocsCollector {
 
     public static TopDocsCollector<?> createDynamicSortingCollector(List<String> algorithmNames, int numHits, FieldDoc after, boolean fillFields, boolean trackDocScores, boolean trackMaxScore) {
         List<TBGAwareCollector> collectors = SortingCollectorSchemaExtractor.getCollectors(algorithmNames);
-        return new DynamicSortingCollector(new HitQueue(numHits), collectors, numHits, after, fillFields, trackDocScores, trackMaxScore);
+        return new SecondarySortCollector(new HitQueue(numHits), collectors, numHits, after, fillFields, trackDocScores, trackMaxScore);
     }
 
 
