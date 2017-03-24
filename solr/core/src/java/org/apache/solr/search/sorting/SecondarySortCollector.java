@@ -6,6 +6,7 @@ import org.apache.lucene.search.*;
 import org.apache.lucene.util.PriorityQueue;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -49,9 +50,8 @@ public class SecondarySortCollector extends TopDocsCollector {
         this.initCollector = this.collectorsIterator.next();
     }
 
-    public static TopDocsCollector<?> createDynamicSortingCollector(List<String> algorithmNames, int numHits, FieldDoc after, boolean fillFields, boolean trackDocScores, boolean trackMaxScore) {
-        List<TBGAwareCollector> collectors = SortingCollectorSchemaExtractor.getCollectors(algorithmNames);
-        return new SecondarySortCollector(new HitQueue(numHits), collectors, numHits, after, fillFields, trackDocScores, trackMaxScore);
+    public static TopDocsCollector<?> create(int numHits, List<TBGAwareCollector> collectors, FieldDoc after, boolean fillFields, boolean trackDocScores, boolean trackMaxScore) {
+        return new SecondarySortCollector(null, collectors, numHits, after, fillFields, trackDocScores, trackMaxScore);
     }
 
 
@@ -95,7 +95,7 @@ public class SecondarySortCollector extends TopDocsCollector {
             int doc = scoreDoc.doc;
             try {
                 LeafCollector currLeafCollector = currentCollector.getLeafCollector((this.singleLeafReaderContext != null) ? this.singleLeafReaderContext : this.contextRangeMap.get(doc));
-                currentCollector.collect(doc);
+                currLeafCollector.collect(doc);
             } catch (IOException e) {
             }
         }
@@ -158,7 +158,7 @@ public class SecondarySortCollector extends TopDocsCollector {
                 this.contextRangeMap = builder.build();
             }
         }
-        return initCollector;
+        return initCollector.getLeafCollector(context);
     }
 
     @Override

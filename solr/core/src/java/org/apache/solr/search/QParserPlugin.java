@@ -80,7 +80,7 @@ public abstract class QParserPlugin implements NamedListInitializedPlugin, SolrI
     map.put(IGainTermsQParserPlugin.NAME, IGainTermsQParserPlugin.class);
     map.put(TextLogisticRegressionQParserPlugin.NAME, TextLogisticRegressionQParserPlugin.class);
     map.put(SignificantTermsQParserPlugin.NAME, SignificantTermsQParserPlugin.class);
-    map.put(DynamicSortQParserPlugin.NAME, DynamicSortQParserPlugin.class);
+    map.put(SecondarySortQParserPlugin.NAME, SecondarySortQParserPlugin.class);
 
     standardPlugins = Collections.unmodifiableMap(map);
   }

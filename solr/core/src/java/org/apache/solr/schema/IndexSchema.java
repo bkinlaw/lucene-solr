@@ -53,6 +53,7 @@ import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.search.Collector;
 import org.apache.lucene.search.TopDocsCollector;
 import org.apache.lucene.search.similarities.Similarity;
+import org.apache.solr.search.sorting.TBGAwareCollector;
 import org.apache.solr.uninverting.UninvertingReader;
 import org.apache.lucene.util.Version;
 import org.apache.solr.common.SolrException;
@@ -162,8 +163,8 @@ public class IndexSchema {
   protected DynamicCopy[] dynamicCopyFields;
   public DynamicCopy[] getDynamicCopyFields() { return dynamicCopyFields; }
 
-  protected Map<String, Collector> secondarySortCollectorMap;
-  public Map<String, Collector> getSecondarySortCollectorMap() { return secondarySortCollectorMap; }
+  protected Map<String, TBGAwareCollector> secondarySortCollectorMap;
+  public Map<String, TBGAwareCollector> getSecondarySortCollectorMap() { return secondarySortCollectorMap; }
 
   /**
    * keys are all fields copied to, count is num of copyField
@@ -708,8 +709,8 @@ public class IndexSchema {
     return explicitRequiredProp;
   }
 
-  protected Map<String, Collector> createSecondarySortCollectorMap(Document document, XPath xpath) throws XPathExpressionException {
-    Map<String, Collector> collectorMap = new HashMap<>();
+  protected Map<String, TBGAwareCollector> createSecondarySortCollectorMap(Document document, XPath xpath) throws XPathExpressionException {
+    Map<String, TBGAwareCollector> collectorMap = new HashMap<>();
     String expression = stepsToPath(SCHEMA, DYNAMIC_VALUE_SORT);
     NodeList nodes = (NodeList) xpath.evaluate(expression, document, XPathConstants.NODESET);
 
@@ -720,11 +721,11 @@ public class IndexSchema {
       final String name = DOMUtil.getAttr(attrs, NAME, "field definition");
       final String collector = DOMUtil.getAttr(attrs, "collector", "field definition");
       final Object obj = loader.newInstance(collector, Object.class);
-      if(!(obj instanceof Collector)) {
-        String msg = "Dynamic sorting value: " + name + "must have a collector";
+      if(!(obj instanceof TBGAwareCollector)) {
+        String msg = "Dynamic sorting value: " + name + "must have a TBGAwareCollector";
         throw new SolrException(ErrorCode.BAD_REQUEST, msg);
       } else {
-        collectorMap.put(name, (Collector)obj);
+        collectorMap.put(name, (TBGAwareCollector)obj);
       }
     }
     return collectorMap;

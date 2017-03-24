@@ -10,7 +10,7 @@ import java.util.List;
  * equivalent to each other and thus need additional tie breaking ranking associated with them. Docs that are considered equivalent when ranking, are
  * grouped together and are exposed via the {@link #getTieBreakerGroups()} method.
  */
-public interface TBGAwareCollector extends LeafCollector {
+public interface TBGAwareCollector extends Collector {
     TBGAwareCollector create(int numHits, boolean fillFields, boolean trackDocScores, boolean trackMaxScore);
     /**
      * Returns the list of TieBreakerGroups found within the page of results after collection completes. Each group is complete - it contains

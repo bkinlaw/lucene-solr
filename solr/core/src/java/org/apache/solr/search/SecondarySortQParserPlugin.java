@@ -1,13 +1,19 @@
 package org.apache.solr.search;
 
 import org.apache.lucene.search.*;
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.params.CommonParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.handler.component.MergeStrategy;
 import org.apache.solr.request.SolrQueryRequest;
+import org.apache.solr.search.sorting.SecondarySortCollector;
+import org.apache.solr.search.sorting.TBGAwareCollector;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public class SecondarySortQParserPlugin extends QParserPlugin {
@@ -36,17 +42,33 @@ public class SecondarySortQParserPlugin extends QParserPlugin {
         @Override
         public Query parse() {
 
-            SolrCore core = req.getCore();
-            Map<String, Collector> secondaySortCollectorMap = core.getLatestSchema().getSecondarySortCollectorMap();
+            String sortStr = localParams.get(CommonParams.SORT);
+            String[] sortAlgs;
+            if(sortStr == null) {
+                throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Need to provide sort algorithms to perform secondary sort.");
+            } else {
+                sortAlgs = sortStr.split(",");
+                if(sortAlgs.length == 0) {
+                    throw new SolrException(SolrException.ErrorCode.BAD_REQUEST, "Need to provide valid sort algorithms to perform secondary sort.");
+                }
+            }
 
-            SecondarySortingCollector secondarySortingCollector = SecondarySortingCollector.create(secondaySortCollectorMap, ...);
+            SolrCore core = req.getCore();
+            Map<String, TBGAwareCollector> secondaySortCollectorMap = core.getLatestSchema().getSecondarySortCollectorMap();
+            List<TBGAwareCollector> collectors = new ArrayList<>();
+
+            for(String sortAlg : sortAlgs) {
+                if(secondaySortCollectorMap.containsKey(sortAlg)) {
+                    collectors.add(secondaySortCollectorMap.get(sortAlg));
+                }
+            }
 
             return new RankQuery() {
                 Query mainQuery;
 
                 @Override
                 public TopDocsCollector getTopDocsCollector(int len, QueryCommand cmd, IndexSearcher searcher) throws IOException {
-                    return secondarySortingCollector;
+                    return SecondarySortCollector.create(len, collectors, null ,false, false, false);
                 }
 
                 @Override
